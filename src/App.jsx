@@ -3,6 +3,7 @@ import './App.css'
 
 const postKey = 'open-close-radar.ugc'
 const saveKey = 'open-close-radar.saved'
+const alertKey = 'open-close-radar.alerts'
 
 const reports = [
   {
@@ -55,7 +56,7 @@ const reports = [
     confidence: '確認待ち',
     source: '現地張り紙',
     tags: ['移転', '喫煙可', '駅近', '地図更新'],
-    note: '喫煙場所検索の更新需要が強い。旧住所から新住所へリダイレクト的に案内できる。',
+    note: '喫煙場所検索の更新需要が強い。旧住所から新住所へ迷わず案内できる。',
   },
   {
     id: 'osaka-karaoke-open',
@@ -86,25 +87,32 @@ const reports = [
 ]
 
 const revenuePlans = [
+  ['LINE通知スポンサー', '地域別アラートの下部に新店クーポン、求人、予約リンクを差し込む。'],
+  ['X速報プロモーション', '閉店前に行きたい投稿、開店カウントダウン、スポンサー投稿をXへ展開。'],
   ['新店広告・PR', '開店前から求人、初回クーポン、オープン告知、予約導線を掲載。'],
   ['閉店前送客', '閉店日までの来店促進、思い出投稿、代替店舗案内で回遊を作る。'],
   ['確認済み掲載', '店舗や運営者が営業日、移転先、閉店日、クーポンを更新できる有料枠。'],
   ['求人・テナント導線', '開店準備中の求人、居抜き、テナント募集、不動産広告へ接続。'],
-  ['地域スポンサー', '市区町村別ページにローカル広告、商店街スポンサー、周辺店舗広告を配置。'],
+]
+
+const alertProducts = [
+  { name: 'LINE地域アラート', text: '市区町村、駅、ジャンル、開店/閉店を指定して、確認済み速報をLINEで受信。' },
+  { name: 'X速報ポスト', text: '確認済み情報をハッシュタグ付きで即時投稿。拡散後は詳細ページとスポンサー枠へ誘導。' },
+  { name: '店舗向け通知枠', text: '新店クーポン、採用告知、閉店セール、移転先案内を通知内の広告枠として販売。' },
 ]
 
 const buzzIdeas = [
   '今月閉店する店まとめ',
   '開店前から追える新店カレンダー',
-  '閉店前に行きたい思い出レビュー募集',
+  'LINEで受け取る駅別閉店アラート',
+  'Xで拡散する閉店前に行きたい店リスト',
   '求人情報から見つけた開店予測',
-  '駅別の閉店跡地・次に入る店予想',
 ]
 
 const faq = [
   ['AIに引用されやすい情報は？', '店名、地域、駅、ジャンル、開店日または閉店日、確認状況、出典、投稿状態を短く表示します。'],
-  ['UGC投稿はどう扱いますか？', '未確認投稿は確認待ちとして表示し、公式SNS、店頭告知、現地写真などで確認済みにします。'],
-  ['収益化の中心は？', '新店広告、クーポン、求人、テナント募集、確認済み掲載、閉店前送客、代替店舗送客です。'],
+  ['LINEとX通知はどう使いますか？', 'ユーザーは地域・駅・ジャンル・状態を登録し、LINEで個別通知、Xで速報投稿や拡散投稿を受け取る想定です。'],
+  ['通知からの収益化は？', '通知スポンサー、新店クーポン、求人、閉店セール、代替店送客、確認済み掲載、Xプロモーションで収益化します。'],
 ]
 
 function readArray(key) {
@@ -121,7 +129,9 @@ function App() {
   const [category, setCategory] = useState('すべて')
   const [posts, setPosts] = useState(() => readArray(postKey))
   const [saved, setSaved] = useState(() => readArray(saveKey))
+  const [alerts, setAlerts] = useState(() => readArray(alertKey))
   const [form, setForm] = useState({ name: '', area: '', type: '開店', memo: '' })
+  const [alertForm, setAlertForm] = useState({ area: '名古屋', category: 'すべて', status: '閉店', channel: 'LINE' })
 
   const statuses = ['すべて', ...new Set(reports.map((report) => report.status))]
   const categories = ['すべて', ...new Set(reports.map((report) => report.category))]
@@ -144,6 +154,13 @@ function App() {
     setForm({ name: '', area: '', type: '開店', memo: '' })
   }
 
+  const submitAlert = (event) => {
+    event.preventDefault()
+    const next = [{ ...alertForm, id: crypto.randomUUID(), date: new Date().toLocaleDateString('ja-JP') }, ...alerts].slice(0, 6)
+    setAlerts(next)
+    localStorage.setItem(alertKey, JSON.stringify(next))
+  }
+
   const toggleSaved = (id) => {
     const next = saved.includes(id) ? saved.filter((item) => item !== id) : [...saved, id]
     setSaved(next)
@@ -154,50 +171,58 @@ function App() {
     <main className="app-shell">
       <section className="hero">
         <div>
-          <span className="brand">Open Close Radar</span>
-          <h1>開店・閉店・移転を、地域の速報データにする。</h1>
+          <span className="brand">開店閉店レーダー</span>
+          <h1>開店・閉店・移転を、LINEとXで届く地域速報にする。</h1>
           <p>
-            店頭告知、公式SNS、求人情報、現地投稿をもとに、開店・閉店・移転・休業・リニューアルを整理。UGCで速報性を高め、広告、求人、代替店送客へつなげます。
+            店頭告知、公式SNS、求人情報、現地投稿をもとに、開店・閉店・移転・休業・リニューアルを整理。UGCで速報性を高め、LINE/X通知から広告、求人、代替店送客へつなげます。
           </p>
         </div>
         <aside className="answer-box">
           <span>AI向け即答</span>
-          <strong>店名、地域、状態、日付、確認状況、出典を1カードで提示</strong>
-          <p>検索結果やAI回答に引用されやすいよう、未確認情報と確認済み情報を分けて表示します。</p>
+          <strong>店名、地域、状態、日付、確認状況、出典、通知導線を1カードで提示</strong>
+          <p>検索結果やAI回答に引用されやすいよう、未確認情報と確認済み情報、通知の受け取り方法を分けて表示します。</p>
         </aside>
       </section>
 
       <section className="search-panel" aria-label="開店閉店検索">
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="地域・駅・店名・ジャンルで検索" />
-        <select value={status} onChange={(event) => setStatus(event.target.value)}>
-          {statuses.map((item) => <option key={item}>{item}</option>)}
-        </select>
-        <select value={category} onChange={(event) => setCategory(event.target.value)}>
-          {categories.map((item) => <option key={item}>{item}</option>)}
-        </select>
+        <select value={status} onChange={(event) => setStatus(event.target.value)}>{statuses.map((item) => <option key={item}>{item}</option>)}</select>
+        <select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((item) => <option key={item}>{item}</option>)}</select>
       </section>
 
       <section className="summary-grid">
         <article><span>掲載情報</span><strong>{reports.length}</strong><p>開店・閉店・移転を横断</p></article>
-        <article><span>検索結果</span><strong>{display.length}</strong><p>地域と状態で絞り込み</p></article>
+        <article><span>通知条件</span><strong>{alerts.length}</strong><p>LINE/Xアラート登録</p></article>
         <article><span>保存済み</span><strong>{saved.length}</strong><p>追跡したい店を保存</p></article>
+      </section>
+
+      <section className="alert-section">
+        <div>
+          <span className="brand">LINE / X Alerts</span>
+          <h2>地域・ジャンル別の開店閉店アラート</h2>
+          <p>LINEは個別通知、Xは速報拡散に向けた導線です。実運用時はLINE Messaging APIとX APIへ接続できます。</p>
+        </div>
+        <form className="alert-form" onSubmit={submitAlert}>
+          <input value={alertForm.area} onChange={(event) => setAlertForm({ ...alertForm, area: event.target.value })} placeholder="地域・駅" />
+          <select value={alertForm.category} onChange={(event) => setAlertForm({ ...alertForm, category: event.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select>
+          <select value={alertForm.status} onChange={(event) => setAlertForm({ ...alertForm, status: event.target.value })}>{statuses.filter((item) => item !== 'すべて').map((item) => <option key={item}>{item}</option>)}</select>
+          <select value={alertForm.channel} onChange={(event) => setAlertForm({ ...alertForm, channel: event.target.value })}><option>LINE</option><option>X</option><option>LINE + X</option></select>
+          <button type="submit">通知条件を保存</button>
+        </form>
+        <div className="alert-grid">
+          {alertProducts.map((item) => <article key={item.name}><strong>{item.name}</strong><p>{item.text}</p></article>)}
+          {alerts.map((alert) => <article key={alert.id}><strong>{alert.channel}通知</strong><p>{alert.area} / {alert.category} / {alert.status} / {alert.date}</p></article>)}
+        </div>
       </section>
 
       <section className="content-grid">
         {display.map((report) => (
           <article className={`card ${report.status === '閉店' ? 'closed' : ''}`} key={report.id}>
-            <div className="card-topline">
-              <span>{report.area} / {report.station}</span>
-              <span>{report.status}</span>
-            </div>
+            <div className="card-topline"><span>{report.area} / {report.station}</span><span>{report.status}</span></div>
             <h2>{report.name}</h2>
             <p>{report.note}</p>
             <div className="tag-row">{report.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-            <div className="metric-row">
-              <span>{report.category}</span>
-              <span>{report.date}</span>
-              <strong>{report.confidence}</strong>
-            </div>
+            <div className="metric-row"><span>{report.category}</span><span>{report.date}</span><strong>{report.confidence}</strong></div>
             <small>出典: {report.source}</small>
             <button type="button" onClick={() => toggleSaved(report.id)}>{saved.includes(report.id) ? '保存済み' : '追跡する'}</button>
           </article>
@@ -208,54 +233,35 @@ function App() {
         <div>
           <span className="brand">UGC</span>
           <h2>開店・閉店・移転・休業情報を投稿</h2>
-          <p>投稿を確認待ちとして蓄積し、公式確認後に地域ページ、速報記事、代替店導線へ展開します。</p>
+          <p>投稿を確認待ちとして蓄積し、公式確認後に地域ページ、LINE通知、X速報、代替店導線へ展開します。</p>
         </div>
         <form className="ugc-form" onSubmit={submitPost}>
           <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="店名" />
           <input value={form.area} onChange={(event) => setForm({ ...form, area: event.target.value })} placeholder="地域・駅" />
           <select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>
-            <option>開店</option>
-            <option>閉店</option>
-            <option>移転</option>
-            <option>休業</option>
-            <option>リニューアル</option>
+            <option>開店</option><option>閉店</option><option>移転</option><option>休業</option><option>リニューアル</option>
           </select>
           <input value={form.memo} onChange={(event) => setForm({ ...form, memo: event.target.value })} placeholder="日付・出典・張り紙・公式SNSなど" />
           <button type="submit">投稿する</button>
         </form>
         <div className="post-grid">
           {posts.length === 0 && <p className="empty-text">まだ投稿はありません。最初の開店閉店情報を投稿できます。</p>}
-          {posts.map((post) => (
-            <article key={post.id}>
-              <span>{post.type} / {post.status}</span>
-              <h3>{post.name}</h3>
-              <p>{post.memo}</p>
-              <small>{post.area || 'エリア未入力'} / {post.date}</small>
-            </article>
-          ))}
+          {posts.map((post) => <article key={post.id}><span>{post.type} / {post.status}</span><h3>{post.name}</h3><p>{post.memo}</p><small>{post.area || 'エリア未入力'} / {post.date}</small></article>)}
         </div>
       </section>
 
       <section className="growth-grid">
-        <div className="revenue-panel">
-          <h2>収益導線</h2>
-          {revenuePlans.map(([title, text]) => <article key={title}><strong>{title}</strong><p>{text}</p></article>)}
-        </div>
-        <div className="buzz-panel">
-          <h2>バズ施策</h2>
-          <ul>{buzzIdeas.map((idea) => <li key={idea}>{idea}</li>)}</ul>
-        </div>
+        <div className="revenue-panel"><h2>収益導線</h2>{revenuePlans.map(([title, text]) => <article key={title}><strong>{title}</strong><p>{text}</p></article>)}</div>
+        <div className="buzz-panel"><h2>バズ施策</h2><ul>{buzzIdeas.map((idea) => <li key={idea}>{idea}</li>)}</ul></div>
       </section>
 
       <section className="seo-section">
         <div className="answer-box">
           <span className="brand">SEO / AIO / LLMO</span>
-          <h2>開店閉店情報は、店名・地域・日付・確認状況・出典を同じ形式で出すほど検索とAI回答に強くなります。</h2>
+          <h2>開店閉店情報は、店名・地域・日付・確認状況・出典・通知導線を同じ形式で出すほど検索とAI回答に強くなります。</h2>
           <p>未確認投稿は確認待ちとして扱い、公式SNSや店頭告知で確認済みにすることで、速報性と信頼性を両立します。</p>
         </div>
-        <div className="faq-grid">
-          {faq.map(([question, answer]) => <article key={question}><h3>{question}</h3><p>{answer}</p></article>)}
-        </div>
+        <div className="faq-grid">{faq.map(([question, answer]) => <article key={question}><h3>{question}</h3><p>{answer}</p></article>)}</div>
       </section>
     </main>
   )
