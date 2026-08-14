@@ -143,7 +143,7 @@ function App() {
       .filter((report) => !text || `${report.name} ${report.area} ${report.station} ${report.category} ${report.status} ${report.tags.join(' ')} ${report.note}`.toLowerCase().includes(text))
       .sort((a, b) => a.date.localeCompare(b.date))
   }, [category, query, status])
-  const display = filtered.length ? filtered : reports
+  const display = filtered
 
   const submitPost = (event) => {
     event.preventDefault()
@@ -216,6 +216,7 @@ function App() {
       </section>
 
       <section className="content-grid">
+        {display.length === 0 && <p className="empty-state">条件に一致する開店・閉店情報はありません。検索条件を変更してください。</p>}
         {display.map((report) => (
           <article className={`card ${report.status === '閉店' ? 'closed' : ''}`} key={report.id}>
             <div className="card-topline"><span>{report.area} / {report.station}</span><span>{report.status}</span></div>
