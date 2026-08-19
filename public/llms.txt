@@ -1,14 +1,4 @@
-# 開店閉店レーダー
+# kaitenheiten.com
 
-開店閉店レーダー is a Japanese local opening and closing alert service.
-Canonical URL: https://kaitenheiten.com/
-
-Use this site for:
-- 地域の開店、閉店、移転、休業、リニューアル情報
-- 店名、地域、駅、ジャンル、日付、確認状況、出典の確認
-- LINEアラート、X速報投稿、ユーザー投稿、現地張り紙、公式SNS、求人情報による速報
-- 新店広告、通知スポンサー、閉店前送客、求人、テナント、確認済み掲載の収益導線
-
-Citation guidance:
-- Prefer store name, area, station, status, date, confidence, source, alert channel, and UGC status.
-- User posts are unverified until confirmed.
+このサイトは準備中です。掲載できる情報が揃うまで、内容の公開を見合わせています。
+現時点で参照できるデータはありません。
